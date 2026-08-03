@@ -19,8 +19,9 @@ RUN apt-get update && apt-get install -y \
 # Install Node.js 20.x for Vite assets build
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
 
-# Fix Apache MPM module conflict (ensure only mpm_prefork is enabled)
-RUN a2dismod mpm_event mpm_worker || true && a2enmod mpm_prefork rewrite
+# Force clean Apache MPM modules to guarantee ONLY mpm_prefork is loaded
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
+    && a2enmod mpm_prefork rewrite
 
 # Change Apache Document Root to /var/www/html/public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
