@@ -1,4 +1,4 @@
-FROM php:8.3-apache
+FROM php:8.3-cli
 
 # Install system dependencies, PHP extensions, and Node.js
 RUN apt-get update && apt-get install -y \
@@ -19,15 +19,6 @@ RUN apt-get update && apt-get install -y \
 # Install Node.js 20.x for Vite assets build
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
 
-# Force clean Apache MPM modules to guarantee ONLY mpm_prefork is loaded
-RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
-    && a2enmod mpm_prefork rewrite
-
-# Change Apache Document Root to /var/www/html/public
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/conf-available/*.conf
-
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -47,8 +38,7 @@ RUN npm run build
 RUN mkdir -p database && touch database/database.sqlite
 
 # Set permissions for storage and bootstrap/cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
+RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/database
 
 # Copy & prepare entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -56,5 +46,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
 
+ENV PORT=80
+
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["apache2-foreground"]
+CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-80}"]
