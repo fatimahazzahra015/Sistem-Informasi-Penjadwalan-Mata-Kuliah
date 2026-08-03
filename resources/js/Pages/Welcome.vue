@@ -16,12 +16,12 @@ const props = defineProps({
 });
 
 const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-const activeDay = ref(props.filters.hari || 'Senin');
+const activeDay = ref(props.filters?.hari || 'Senin');
 
 const filterForm = ref({
-    ruangan_id: props.filters.ruangan_id || '',
-    dosen_id: props.filters.dosen_id || '',
-    mata_kuliah_id: props.filters.mata_kuliah_id || '',
+    ruangan_id: props.filters?.ruangan_id || '',
+    dosen_id: props.filters?.dosen_id || '',
+    mata_kuliah_id: props.filters?.mata_kuliah_id || '',
 });
 
 // Watch active day and trigger page update

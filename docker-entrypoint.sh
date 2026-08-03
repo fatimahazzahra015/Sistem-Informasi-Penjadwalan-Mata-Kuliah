@@ -7,9 +7,10 @@ if [ -f /var/www/html/database/database.sqlite ]; then
     chmod 664 /var/www/html/database/database.sqlite || true
 fi
 
-# Run migrations
-echo "Running database migrations..."
+# Run migrations & seeders
+echo "Running database migrations and seeders..."
 php artisan migrate --force --graceful || true
+php artisan db:seed --force || true
 
 # Create storage link if not exists
 php artisan storage:link || true
