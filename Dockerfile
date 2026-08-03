@@ -1,15 +1,6 @@
-# Stage 1: Build Frontend Assets
-FROM node:20-alpine AS frontend
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci || npm install
-COPY . .
-RUN npm run build
-
-# Stage 2: PHP Runtime with Apache
 FROM php:8.3-apache
 
-# Install system dependencies & PHP extensions
+# Install system dependencies, PHP extensions, and Node.js
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -24,6 +15,9 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo pdo_sqlite pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x for Vite assets build
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -40,10 +34,13 @@ WORKDIR /var/www/html
 
 # Copy application files
 COPY . .
-COPY --from=frontend /app/public/build ./public/build
 
-# Install PHP production dependencies
+# 1. Install Composer dependencies first (so vendor/tightenco/ziggy exists)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# 2. Install NPM dependencies & build Vite assets
+RUN npm ci || npm install
+RUN npm run build
 
 # Prepare SQLite database file if sqlite is used
 RUN mkdir -p database && touch database/database.sqlite
