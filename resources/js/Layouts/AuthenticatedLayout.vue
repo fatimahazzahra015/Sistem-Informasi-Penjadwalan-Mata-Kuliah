@@ -9,6 +9,7 @@ const showingNavigationDropdown = ref(false);
 // Daftar menu admin dipusatkan di satu tempat supaya navbar desktop & mobile selalu sinkron
 const adminMenu = [
     { route: 'admin.jadwal', label: 'Jadwal' },
+    { route: 'admin.setup.index', label: 'Setup Jadwal' },
     { route: 'admin.semester.index', label: 'Semester' },
     { route: 'admin.dosen.index', label: 'Dosen' },
     { route: 'admin.matkul.index', label: 'Mata Kuliah' },

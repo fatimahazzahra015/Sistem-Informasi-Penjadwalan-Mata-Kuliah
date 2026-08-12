@@ -311,7 +311,7 @@ const filteredCoursesList = computed(() => {
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 {{ courseToDelete?.nama }}
                             </span>
-                            ({{ courseToDelete?.kode_mk }}). Semua jadwal yang terkait juga akan terhapus. Tindakan ini tidak dapat dibatalkan.
+                            ({{ courseToDelete?.kode_mk }}). Semua jadwal yang terkait juga akan terhapus. 
                         </p>
                     </div>
                 </div>

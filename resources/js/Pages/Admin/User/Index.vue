@@ -327,7 +327,7 @@ const filteredUsersList = computed(() => {
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 {{ userToDelete?.name }}
                             </span>
-                            ({{ userToDelete?.email }}). Jika akun ini dosen, data profil dosennya juga akan terhapus. Tindakan ini tidak dapat dibatalkan.
+                            ({{ userToDelete?.email }}). Jika akun ini dosen, data profil dosennya juga akan terhapus. 
                         </p>
                     </div>
                 </div>

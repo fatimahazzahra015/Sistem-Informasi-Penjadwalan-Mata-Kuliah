@@ -307,7 +307,7 @@ const filteredDosenList = computed(() => {
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 {{ dosenToDelete?.nama }}
                             </span>
-                            ({{ dosenToDelete?.kode_dosen }}). Akun login pengguna terkait juga akan dihapus. Tindakan ini tidak dapat dibatalkan.
+                            ({{ dosenToDelete?.kode_dosen }}). Akun login pengguna terkait juga akan dihapus. 
                         </p>
                     </div>
                 </div>

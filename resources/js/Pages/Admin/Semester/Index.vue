@@ -301,7 +301,7 @@ function confirmDelete() {
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 Semester {{ semesterToDelete?.nama }} {{ semesterToDelete?.tahun_ajaran }}
                             </span>
-                            beserta semua jadwal yang terkait. Tindakan ini tidak dapat dibatalkan.
+                            beserta semua jadwal yang terkait. 
                         </p>
                     </div>
                 </div>

@@ -209,7 +209,7 @@ function confirmDelete() {
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 Kelas {{ classToDelete?.nama_kelas }}
                             </span>
-                            . Semua jadwal perkuliahan yang terkait kelas ini juga akan terhapus. Tindakan ini tidak dapat dibatalkan.
+                            . Semua jadwal perkuliahan yang terkait kelas ini juga akan terhapus. 
                         </p>
                     </div>
                 </div>

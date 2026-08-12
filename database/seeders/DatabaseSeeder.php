@@ -9,6 +9,9 @@ use App\Models\Ruangan;
 use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\Jadwal;
+use App\Models\PengaturanKampus;
+use App\Models\KelasDibuka;
+use App\Models\PreferensiDosen;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,6 +25,12 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@utm.ac.id',
             'password' => Hash::make('password'),
             'role' => 'admin',
+        ]);
+
+        // 1b. Create Default Campus Settings (Tahap 1)
+        PengaturanKampus::create([
+            'max_kelas_per_semester' => 3,
+            'total_ruangan' => 15,
         ]);
 
         // 2. Create Semesters
@@ -299,6 +308,25 @@ class DatabaseSeeder extends Seeder
                     'hari' => $day,
                     'slot_mulai' => $slotMulai,
                     'slot_selesai' => $slotSelesai,
+                ]);
+
+                // Create corresponding KelasDibuka
+                $kb = KelasDibuka::firstOrCreate([
+                    'semester_id' => $semesterAktif->id,
+                    'mata_kuliah_id' => $mk->id,
+                    'dosen_id' => $dosen->id,
+                    'nama_kelas' => 'Kelas ' . $kelas->nama_kelas,
+                ], [
+                    'status' => 'open',
+                ]);
+
+                // Create initial PreferensiDosen based on seeded schedule
+                PreferensiDosen::firstOrCreate([
+                    'dosen_id' => $dosen->id,
+                    'kelas_dibuka_id' => $kb->id,
+                ], [
+                    'hari' => $day,
+                    'sesi' => $slotMulai,
                 ]);
             }
         }

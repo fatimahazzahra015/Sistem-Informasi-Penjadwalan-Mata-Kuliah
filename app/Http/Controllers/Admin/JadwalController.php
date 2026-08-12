@@ -9,6 +9,9 @@ use App\Models\Dosen;
 use App\Models\MataKuliah;
 use App\Models\Ruangan;
 use App\Models\Kelas;
+use App\Models\PengaturanKampus;
+use App\Models\PreferensiDosen;
+use App\Services\AutoScheduleService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -17,6 +20,16 @@ class JadwalController extends Controller
     public function index()
     {
         $activeSemester = Semester::where('is_active', true)->first();
+        $pengaturan = PengaturanKampus::firstOrCreate([], [
+            'max_kelas_per_semester' => 3,
+            'total_ruangan' => Ruangan::count() > 0 ? Ruangan::count() : 15,
+            'is_released' => false,
+            'is_schedule_published' => false,
+        ]);
+
+        $preferensiList = PreferensiDosen::with(['dosen', 'kelasDibuka.mataKuliah'])
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         if (!$activeSemester) {
             return Inertia::render('Admin/Jadwal/Index', [
@@ -28,6 +41,9 @@ class JadwalController extends Controller
                 'classes' => [],
                 'activeSemester' => null,
                 'slots' => Jadwal::getAllSlots(),
+                'pengaturan' => $pengaturan,
+                'preferensiList' => $preferensiList,
+                'isSchedulePublished' => (bool)$pengaturan->is_schedule_published,
             ]);
         }
 
@@ -44,7 +60,42 @@ class JadwalController extends Controller
             'classes' => Kelas::all(),
             'activeSemester' => $activeSemester,
             'slots' => Jadwal::getAllSlots(),
+            'pengaturan' => $pengaturan,
+            'preferensiList' => $preferensiList,
+            'isSchedulePublished' => (bool)$pengaturan->is_schedule_published,
         ]);
+    }
+
+    /**
+     * Publish / Unpublish final schedule to public Welcome.vue & lock lecturer dashboard.
+     */
+    public function togglePublishSchedule(Request $request)
+    {
+        $pengaturan = PengaturanKampus::firstOrCreate([]);
+        $newStatus = !$pengaturan->is_schedule_published;
+        $pengaturan->update(['is_schedule_published' => $newStatus]);
+
+        $msg = $newStatus
+            ? '🚀 Jadwal kuliah final BERHASIL dipublikasikan! Jadwal kini tampil di halaman utama (Welcome.vue) dan terkunci di Dashboard Dosen.'
+            : '🔒 Publikasi jadwal ditarik kembali ke mode Draft.';
+
+        return redirect()->back()->with('success', $msg);
+    }
+
+    /**
+     * Trigger backend auto schedule engine.
+     */
+    public function generateAuto(AutoScheduleService $service)
+    {
+        $result = $service->generate();
+
+        if (!$result['success']) {
+            return redirect()->back()->withErrors(['auto' => $result['message']]);
+        }
+
+        return redirect()->back()
+            ->with('success', $result['message'])
+            ->with('generationLogs', $result['logs']);
     }
 
     public function store(Request $request)

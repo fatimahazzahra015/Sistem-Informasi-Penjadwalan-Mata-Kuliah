@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\JadwalController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SetupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,11 +35,20 @@ Route::middleware('auth')->group(function () {
 // 4. Lecturer Routes (auth + can:dosen)
 Route::middleware(['auth', 'can:dosen'])->group(function () {
     Route::get('/dosen/dashboard', [ScheduleViewController::class, 'dosenDashboard'])->name('dosen.dashboard');
+    Route::post('/dosen/preferensi', [ScheduleViewController::class, 'storePreferensiDosen'])->name('dosen.preferensi.store');
+    Route::delete('/dosen/preferensi/{preferensi}', [ScheduleViewController::class, 'destroyPreferensiDosen'])->name('dosen.preferensi.destroy');
     Route::get('/export/pdf/dosen', [PDFExportController::class, 'exportDosen'])->name('export.pdf.dosen');
 });
 
 // 5. Administrator Routes (auth + can:admin)
 Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Setup Phase (Tahap 1 Admin)
+    Route::get('/setup', [SetupController::class, 'index'])->name('setup.index');
+    Route::post('/setup/pengaturan', [SetupController::class, 'updatePengaturan'])->name('setup.updatePengaturan');
+    Route::post('/setup/release', [SetupController::class, 'toggleRelease'])->name('setup.toggleRelease');
+    Route::post('/setup/kelas-dibuka', [SetupController::class, 'storeKelasDibuka'])->name('setup.storeKelasDibuka');
+    Route::delete('/setup/kelas-dibuka/{kelasDibuka}', [SetupController::class, 'destroyKelasDibuka'])->name('setup.destroyKelasDibuka');
+
     // Semester Management
     Route::get('/semester', [SemesterController::class, 'index'])->name('semester.index');
     Route::post('/semester', [SemesterController::class, 'store'])->name('semester.store');
@@ -57,8 +67,10 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     // User Account Management
     Route::resource('pengguna', UserController::class)->except(['create', 'edit', 'show']);
 
-    // Schedule Management & Validation
+    // Schedule Management & Auto-Generation
     Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal');
+    Route::post('/jadwal/generate-auto', [JadwalController::class, 'generateAuto'])->name('jadwal.generateAuto');
+    Route::post('/jadwal/publish', [JadwalController::class, 'togglePublishSchedule'])->name('jadwal.togglePublish');
     Route::post('/jadwal', [JadwalController::class, 'store'])->name('jadwal.store');
     Route::put('/jadwal/{jadwal}', [JadwalController::class, 'update'])->name('jadwal.update');
     Route::delete('/jadwal/{jadwal}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');

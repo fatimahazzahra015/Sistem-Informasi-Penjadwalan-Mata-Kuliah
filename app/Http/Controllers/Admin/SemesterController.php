@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Semester;
 use App\Models\Jadwal;
+use App\Models\PengaturanKampus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -42,9 +43,16 @@ class SemesterController extends Controller
 
             // Set target semester to active
             $semester->update(['is_active' => true]);
+
+            // Reset release & publish status for fresh semester setup
+            $pengaturan = PengaturanKampus::firstOrCreate([]);
+            $pengaturan->update([
+                'is_released' => false,
+                'is_schedule_published' => false,
+            ]);
         });
 
-        return redirect()->back()->with('success', 'Semester aktif berhasil diperbarui.');
+        return redirect()->back()->with('success', "Semester {$semester->nama} {$semester->tahun_ajaran} berhasil diaktifkan. Data alokasi kelas dan jadwal kembali kosongan untuk semester baru ini.");
     }
 
     public function viewArchive(Semester $semester)

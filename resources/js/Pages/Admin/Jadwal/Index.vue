@@ -15,7 +15,38 @@ const props = defineProps({
     classes: Array,
     activeSemester: Object,
     slots: Object,
+    pengaturan: Object,
+    preferensiList: Array,
+    isSchedulePublished: Boolean,
 });
+
+const publishForm = useForm({});
+const togglePublishSchedule = () => {
+    publishForm.post(route('admin.jadwal.togglePublish'), {
+        preserveScroll: true,
+    });
+};
+
+// --- Konfirmasi Penjadwalan Otomatis via Modal.vue (menggantikan window.confirm) ---
+const isGenerateModalOpen = ref(false);
+const autoForm = useForm({});
+
+function askGenerateAuto() {
+    isGenerateModalOpen.value = true;
+}
+
+function closeGenerateModal() {
+    if (autoForm.processing) return;
+    isGenerateModalOpen.value = false;
+}
+
+function confirmGenerateAuto() {
+    autoForm.post(route('admin.jadwal.generateAuto'), {
+        preserveScroll: true,
+        onSuccess: () => closeGenerateModal(),
+        onError: () => closeGenerateModal(),
+    });
+}
 
 const isModalOpen = ref(false);
 const editingSchedule = ref(null);
@@ -61,11 +92,11 @@ const hasConflict = ref(false);
 
 // Judul peringatan disesuaikan dengan jenis konflik yang terdeteksi
 const conflictTitleMap = {
-    ruangan: '🚨 Bentrok Ruangan!',
-    dosen: '🚨 Bentrok Dosen!',
-    kelas: '🚨 Bentrok Kelas!',
+    ruangan: 'Bentrok Ruangan',
+    dosen: 'Bentrok Dosen',
+    kelas: 'Bentrok Kelas',
 };
-const conflictTitle = computed(() => conflictTitleMap[conflictType.value] || '🚨 Peringatan Bentrok Jadwal!');
+const conflictTitle = computed(() => conflictTitleMap[conflictType.value] || 'Peringatan Bentrok Jadwal');
 
 function openAddModal() {
     editingSchedule.value = null;
@@ -274,17 +305,58 @@ const sortedSchedules = computed(() => {
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
 
                 <!-- Header Section -->
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-200 dark:border-gray-700 shadow-sm">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-gray-100 tracking-tight">
-                            Manajemen Penjadwalan Kuliah
-                        </h2>
-                        <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
-                            Manajemen jadwal mata kuliah semester aktif
-                        </p>
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-200 dark:border-gray-700 shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div>
+                            <div class="flex items-center gap-2.5">
+                                <h2 class="text-2xl font-extrabold text-slate-900 dark:text-gray-100 tracking-tight">
+                                    Manajemen Penjadwalan Kuliah
+                                </h2>
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                                    :class="isSchedulePublished
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900'
+                                        : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900'"
+                                >
+                                    <span class="h-1.5 w-1.5 rounded-full" :class="isSchedulePublished ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                                    {{ isSchedulePublished ? 'Published' : 'Draft' }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-slate-500 dark:text-gray-400 mt-1">
+                                Kelola jadwal mata kuliah untuk semester aktif
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
+                        <button
+                            @click="togglePublishSchedule"
+                            :disabled="publishForm.processing"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap disabled:opacity-50"
+                            :class="isSchedulePublished
+                                ? 'bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-200 border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800'
+                                : 'bg-emerald-600 hover:bg-emerald-700 text-white'"
+                        >
+                            <svg v-if="isSchedulePublished" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                            </svg>
+                            <svg v-else class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 19.5l7.5-7.5m0 0l7.5 7.5m-7.5-7.5V3" />
+                            </svg>
+                            {{ isSchedulePublished ? 'Tarik Jadwal' : 'Publish Jadwal' }}
+                        </button>
+
+                        <button
+                            @click="askGenerateAuto"
+                            :disabled="autoForm.processing"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-600 text-white hover:bg-amber-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50"
+                        >
+                            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                            </svg>
+                            Penjadwalan Otomatis
+                        </button>
+
                         <button
                             @click="openAddModal"
                             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm whitespace-nowrap"
@@ -292,8 +364,32 @@ const sortedSchedules = computed(() => {
                             <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
-                            Tambah Jadwal
+                            Tambah Manual
                         </button>
+                    </div>
+                </div>
+
+                <!-- Flash Message & Logs -->
+                <div v-if="$page.props.flash?.success" class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl font-medium text-sm">
+                    {{ $page.props.flash.success }}
+                </div>
+
+                <div v-if="$page.props.flash?.generationLogs && $page.props.flash.generationLogs.length" class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                        <svg class="h-4 w-4 text-slate-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Log Resolusi Algoritma Auto-Schedule (Tahap 3)
+                    </h3>
+                    <div class="max-h-60 overflow-y-auto space-y-2 pr-2">
+                        <div
+                            v-for="(log, idx) in $page.props.flash.generationLogs"
+                            :key="idx"
+                            class="text-xs p-2.5 rounded-lg border font-mono"
+                            :class="log.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : (log.type === 'shifted' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-rose-50 border-rose-200 text-rose-900')"
+                        >
+                            {{ log.message }}
+                        </div>
                     </div>
                 </div>
 
@@ -302,10 +398,10 @@ const sortedSchedules = computed(() => {
                     v-if="!activeSemester"
                     class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm flex items-start gap-3"
                 >
-                    <svg class="h-5 w-5 flex-shrink-0 mt-0.5" style="color: #b91c1c;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-5 w-5 flex-shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                     </svg>
-                    <p class="text-sm font-semibold" style="color: #b91c1c;">
+                    <p class="text-sm font-semibold text-rose-700 dark:text-rose-400">
                         Tidak ada semester aktif. Silakan aktifkan semester terlebih dahulu pada menu
                         <Link :href="route('admin.semester.index')" class="underline">Manajemen Semester</Link>.
                     </p>
@@ -621,6 +717,51 @@ const sortedSchedules = computed(() => {
             </div>
         </div>
 
+        <!-- Konfirmasi Penjadwalan Otomatis -->
+        <Modal :show="isGenerateModalOpen" max-width="md" @close="closeGenerateModal">
+            <div class="p-6">
+                <div class="flex items-start gap-4">
+                    <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                    </span>
+                    <div class="min-w-0">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-gray-100">
+                            Jalankan Penjadwalan Otomatis?
+                        </h3>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-gray-400">
+                            Sistem akan menyusun jadwal berdasarkan preferensi waktu dosen dan 3 lapis filter
+                            (hard &amp; soft constraints). Jadwal yang sudah ada dapat berubah mengikuti hasil
+                            algoritma. 
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                    <button
+                        type="button"
+                        @click="closeGenerateModal"
+                        :disabled="autoForm.processing"
+                        class="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-800 transition-all border border-slate-200 dark:border-gray-700 disabled:opacity-50"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        @click="confirmGenerateAuto"
+                        :disabled="autoForm.processing"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-sm disabled:opacity-50"
+                    >
+                        <svg v-if="autoForm.processing" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18" />
+                        </svg>
+                        {{ autoForm.processing ? 'Memproses...' : 'Ya, Jalankan' }}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+
         <Modal :show="isDeleteModalOpen" max-width="md" @close="closeDeleteModal">
             <div class="p-6">
                 <div class="flex items-start gap-4">
@@ -642,7 +783,7 @@ const sortedSchedules = computed(() => {
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 {{ scheduleToDelete?.kelas?.nama_kelas }}
                             </span>
-                            pada hari {{ scheduleToDelete?.hari }}. Tindakan ini tidak dapat dibatalkan.
+                            pada hari {{ scheduleToDelete?.hari }}.
                         </p>
                     </div>
                 </div>
