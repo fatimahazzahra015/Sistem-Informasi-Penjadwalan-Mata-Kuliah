@@ -31,7 +31,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Log in" />
+    <Head title="Login" />
 
     <div class="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col">
         <Navbar 
@@ -101,7 +101,7 @@ const submit = () => {
                             :class="{ 'opacity-25': form.processing }"
                             :disabled="form.processing"
                         >
-                            Log in
+                            Login
                         </button>
                     </div>
                 </form>
