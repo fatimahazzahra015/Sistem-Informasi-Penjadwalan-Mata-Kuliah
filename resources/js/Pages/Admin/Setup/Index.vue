@@ -699,7 +699,7 @@ function resetFilters() {
                             dengan dosen pengampu
                             <span class="font-semibold text-slate-700 dark:text-gray-200">
                                 {{ kelasToDelete?.dosen?.nama }}
-                            </span>. Tindakan ini tidak dapat dibatalkan.
+                            </span>.
                         </p>
                     </div>
                 </div>

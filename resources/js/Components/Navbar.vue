@@ -54,7 +54,7 @@ defineProps({
                         :href="route('login')"
                         class="px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-900 text-white hover:bg-blue-800 transition-all shadow-sm"
                     >
-                        Log In
+                        Login
                     </Link>
                 </template>
             </div>
