@@ -18,6 +18,8 @@ const props = defineProps({
 const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 const viewMode = ref('timetable');
 
+const exportPdfUrl = computed(() => route('export.pdf.dosen', { mode: viewMode.value }));
+
 // Preference Form
 const formPref = useForm({
     kelas_dibuka_id: '',
@@ -152,7 +154,7 @@ function badgeClassesForSemester(semester) {
                     </div>
 
                     <a
-                        :href="route('export.pdf.dosen')"
+                        :href="exportPdfUrl"
                         target="_blank"
                         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-sm whitespace-nowrap"
                     >
